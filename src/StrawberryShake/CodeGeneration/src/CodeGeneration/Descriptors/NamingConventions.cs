@@ -72,6 +72,9 @@ public static class NamingConventions
     public static string CreateInputValueInfo(string name) =>
         $"{NameUtils.GetInterfaceName(name)}Info";
 
+    public static string CreateInputValue(string name) =>
+        NameUtils.GetInterfaceName(name);
+
     public static string CreateIsSetProperty(string name) =>
         $"Is{NameUtils.GetPropertyName(name)}Set";
 

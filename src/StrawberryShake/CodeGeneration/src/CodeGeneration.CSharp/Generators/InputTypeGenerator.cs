@@ -16,7 +16,8 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
     {
         var stateNamespace = $"{descriptor.RuntimeType.Namespace}.{State}";
         var infoInterfaceType = $"{stateNamespace}.{CreateInputValueInfo(descriptor.Name)}";
-        
+        var inputInterfaceType = $"{stateNamespace}.{CreateInputValue(descriptor.Name)}";
+
         var modifier = settings.AccessModifier == AccessModifier.Public
             ? SyntaxKind.PublicKeyword
             : SyntaxKind.InternalKeyword;
@@ -27,7 +28,7 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
             descriptor.RuntimeType.NamespaceWithoutGlobal,
             settings.InputRecords
                 ? GenerateRecord(descriptor, modifier, infoInterfaceType)
-                : GenerateClass(descriptor, modifier, infoInterfaceType));
+                : GenerateClass(descriptor, modifier, inputInterfaceType,infoInterfaceType));
     }
 
     private BaseTypeDeclarationSyntax GenerateRecord(
@@ -58,14 +59,14 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
         return recordDeclaration;
     }
 
-    private BaseTypeDeclarationSyntax GenerateClass(
-        InputObjectTypeDescriptor descriptor,
+    private BaseTypeDeclarationSyntax GenerateClass(InputObjectTypeDescriptor descriptor,
         SyntaxKind accessModifier,
+        string interfaceType,
         string infoInterfaceType)
     {
         var classDeclaration =
             ClassDeclaration(descriptor.Name.ToEscapedName())
-                .AddImplements(infoInterfaceType)
+                .AddImplements(infoInterfaceType,interfaceType)
                 .AddModifiers(
                     Token(accessModifier),
                     Token(SyntaxKind.PartialKeyword))

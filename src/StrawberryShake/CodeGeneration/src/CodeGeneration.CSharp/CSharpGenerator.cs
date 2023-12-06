@@ -37,7 +37,7 @@ public static class CSharpGenerator
         new OperationServiceInterfaceGenerator(), new ResultDataFactoryGenerator(),
         new ResultFromEntityTypeMapperGenerator(), new ResultInfoGenerator(),
         new ResultTypeGenerator(), new StoreAccessorGenerator(), new NoStoreAccessorGenerator(),
-        new InputTypeGenerator(), new InputTypeStateInterfaceGenerator(),
+        new InputTypeGenerator(), new InputTypeInterfaceGenerator(), new InputTypeStateInterfaceGenerator(),
         new ResultInterfaceGenerator(), new DataTypeGenerator(), new RazorQueryGenerator(),
         new RazorSubscriptionGenerator()
     };

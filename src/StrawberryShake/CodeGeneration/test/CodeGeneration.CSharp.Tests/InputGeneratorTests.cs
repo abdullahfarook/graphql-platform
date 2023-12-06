@@ -25,6 +25,23 @@ public class InputGeneratorTests
                 }",
             "extend schema @key(fields: \"id\")");
     }
+    [Fact]
+    public void Operation_With_Simple_Arguments()
+    {
+        AssertResult(
+            @"query test($single: Bar!) {
+                    foo(single: $single)
+                }",
+            @"type Query {
+                    foo(single: Bar!): String
+                }
+
+                input Bar {
+                    str: String
+                    strNonNullable: String!
+                }",
+            "extend schema @key(fields: \"id\")");
+    }
 
     [Fact]
     public void Operation_With_Comments()
