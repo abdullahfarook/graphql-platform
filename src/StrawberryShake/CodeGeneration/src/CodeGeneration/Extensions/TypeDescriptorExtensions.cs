@@ -9,7 +9,10 @@ public static class TypeDescriptorExtensions
 {
     public static bool IsLeaf(this ITypeDescriptor typeDescriptor) =>
         typeDescriptor.Kind == TypeKind.Leaf;
-
+    public static bool IsInput(this ITypeDescriptor typeDescriptor) =>
+        typeDescriptor.Kind == TypeKind.Input;
+    public static bool IsFilterInput(this ITypeDescriptor typeDescriptor) =>
+        typeDescriptor.Name.EndsWith("FilterInput");
     public static bool IsEntity(this ITypeDescriptor typeDescriptor) =>
         typeDescriptor.Kind == TypeKind.Entity;
 

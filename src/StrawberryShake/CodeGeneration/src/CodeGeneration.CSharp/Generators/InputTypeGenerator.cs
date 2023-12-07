@@ -27,13 +27,14 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
             null,
             descriptor.RuntimeType.NamespaceWithoutGlobal,
             settings.InputRecords
-                ? GenerateRecord(descriptor, modifier, infoInterfaceType)
-                : GenerateClass(descriptor, modifier, inputInterfaceType,infoInterfaceType));
+                ? GenerateRecord(descriptor, modifier,inputInterfaceType, infoInterfaceType)
+                : GenerateClass(descriptor, modifier, inputInterfaceType, infoInterfaceType));
     }
 
     private BaseTypeDeclarationSyntax GenerateRecord(
         InputObjectTypeDescriptor descriptor,
         SyntaxKind accessModifier,
+        string interfaceType,
         string infoInterfaceType)
     {
         var recordDeclaration =
@@ -50,6 +51,7 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
         recordDeclaration = GenerateProperties(
             recordDeclaration,
             SyntaxKind.InitAccessorDeclaration,
+            interfaceType,
             infoInterfaceType,
             descriptor);
 
@@ -64,9 +66,12 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
         string interfaceType,
         string infoInterfaceType)
     {
+        var interfaces = descriptor.Name.EndsWith("FilterInput") == false
+            ? new[] { infoInterfaceType, interfaceType }
+            : new[] { infoInterfaceType };
         var classDeclaration =
             ClassDeclaration(descriptor.Name.ToEscapedName())
-                .AddImplements(infoInterfaceType,interfaceType)
+                .AddImplements(interfaces)
                 .AddModifiers(
                     Token(accessModifier),
                     Token(SyntaxKind.PartialKeyword))
@@ -77,6 +82,7 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
         classDeclaration = GenerateProperties(
             classDeclaration,
             SyntaxKind.SetAccessorDeclaration,
+            interfaceType,
             infoInterfaceType,
             descriptor);
 
@@ -86,6 +92,7 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
     private T GenerateProperties<T>(
         T typeDeclarationSyntax,
         SyntaxKind setAccessorKind,
+        string interfaceType,
         string infoInterfaceType,
         InputObjectTypeDescriptor descriptor)
         where T : TypeDeclarationSyntax
@@ -161,6 +168,25 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
                             IdentifierName(CreateIsSetField(prop.Name))))
                     .WithSemicolonToken(
                         Token(SyntaxKind.SemicolonToken)));
+            // if prop is input and not filterInput then generate following
+            // StateNamespace.PropInterface inputInterfaceType.PropertyName { get => this.PropertyName; }
+           // i.e State.INomineeDtoInput State.ICreateIndividualInput.Nominee => Nominee;
+            if (prop.Type.IsInput() && prop.Type.IsFilterInput() == false)
+            {
+                var stateNamespace = $"{descriptor.RuntimeType.Namespace}.{State}";
+                var returnType = ParseTypeName($"{stateNamespace}.{CreateInputValue(prop.Type.Name)}");
+                var propertyName = $"{interfaceType}.{prop.Name}";
+                current = current.AddMembers(
+                    PropertyDeclaration(
+                            returnType,
+                            propertyName)
+                        .WithExpressionBody(
+                            ArrowExpressionClause(
+                                IdentifierName(prop.Name)))
+                        .WithSemicolonToken(
+                            Token(SyntaxKind.SemicolonToken)));
+            }
+
         }
 
         return (T)current;

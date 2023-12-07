@@ -26,6 +26,11 @@ public static class DescriptorExtensions
         this ITypeDescriptor typeReferenceDescriptor,
         TypeReferenceBuilder? builder = null) =>
         ParseTypeName(typeReferenceDescriptor.ToTypeReference(builder).ToString());
+    // ToInterfaceTypeSyntax
+    public static TypeSyntax ToInterfaceTypeSyntax(
+        this ITypeDescriptor typeReferenceDescriptor,
+        TypeReferenceBuilder? builder = null) =>
+        ParseTypeName(typeReferenceDescriptor.ToInterfaceReference(builder).ToString());
 
     public static TypeReferenceBuilder ToTypeReference(
         this ITypeDescriptor typeReferenceDescriptor,
@@ -107,6 +112,40 @@ public static class DescriptorExtensions
             INamedTypeDescriptor d => actualBuilder.SetName(d.RuntimeType.ToString()),
 
             _ => throw new ArgumentOutOfRangeException(nameof(typeDescriptor))
+        };
+    }
+    // ToInterfaceReference
+    public static TypeReferenceBuilder ToInterfaceReference(
+        this ITypeDescriptor typeReferenceDescriptor,
+        TypeReferenceBuilder? builder = null,
+        bool nonNull = false)
+    {
+        var actualBuilder = builder ?? TypeReferenceBuilder.New();
+
+        if (typeReferenceDescriptor is NonNullTypeDescriptor n)
+        {
+            typeReferenceDescriptor = n.InnerType;
+        }
+        else if (!nonNull)
+        {
+            actualBuilder.SetIsNullable(true);
+        }
+
+        return typeReferenceDescriptor switch
+        {
+            ListTypeDescriptor list =>
+                ToInterfaceReference(list.InnerType, actualBuilder.SetListType()),
+
+            EnumTypeDescriptor @enum =>
+                actualBuilder.SetName(@enum.RuntimeType.ToString()),
+
+            ILeafTypeDescriptor leaf =>
+                actualBuilder.SetName(leaf.RuntimeType.ToString()),
+
+            INamedTypeDescriptor named =>
+                actualBuilder.SetName(named.RuntimeType.ToString()),
+
+            _ => throw new ArgumentOutOfRangeException(nameof(typeReferenceDescriptor))
         };
     }
 }

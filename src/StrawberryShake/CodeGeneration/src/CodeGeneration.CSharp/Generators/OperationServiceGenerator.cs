@@ -436,8 +436,10 @@ public class OperationServiceGenerator : ClassBaseGenerator<OperationDescriptor>
         }
 
         var processed = new HashSet<string>();
+         var uploadScalarCount = 0;
         foreach (var argument in descriptor.Arguments)
         {
+            uploadScalarCount++;
             if (argument.Type.NamedType() is InputObjectTypeDescriptor { HasUpload: true } type)
             {
                 if (processed.Add(argument.Type.NamedType().Name))
@@ -455,7 +457,7 @@ public class OperationServiceGenerator : ClassBaseGenerator<OperationDescriptor>
                 .AddParameter("path", p => p.SetType(TypeNames.String))
                 .AddParameter("value", p => p.SetType(argument.Type.ToTypeReference()))
                 .AddParameter(_files, p => p.SetType(_filesType))
-                .AddCode(BuildUploadFileMapper(argument.Type, "path", "value")!);
+                .AddCode(BuildUploadFileMapper(argument.Type,uploadScalarCount, "path", "value")!);
         }
     }
 
@@ -473,9 +475,10 @@ public class OperationServiceGenerator : ClassBaseGenerator<OperationDescriptor>
             .AddParameter("path", p => p.SetType(TypeNames.String))
             .AddParameter("value", p => p.SetType(type.ToTypeReference(nonNull: true)))
             .AddParameter(_files, p => p.SetType(_filesType));
-
+        var uploadScalarCount = 0;
         foreach (var field in type.Properties)
         {
+            uploadScalarCount++;
             if (!field.Type.HasUpload())
             {
                 continue;
@@ -493,7 +496,7 @@ public class OperationServiceGenerator : ClassBaseGenerator<OperationDescriptor>
                         .SetLefthandSide($"var value{field.Name}")
                         .SetRighthandSide($"value.{field.Name}"))
                 .AddCode(
-                    BuildUploadFileMapper(field.Type, $"path{field.Name}", $"value{field.Name}"))
+                    BuildUploadFileMapper(field.Type,uploadScalarCount, $"path{field.Name}", $"value{field.Name}"))
                 .AddEmptyLine();
 
             if (field.Type.NamedType() is InputObjectTypeDescriptor nextType)
@@ -505,6 +508,7 @@ public class OperationServiceGenerator : ClassBaseGenerator<OperationDescriptor>
 
     private static ICode BuildUploadFileMapper(
         ITypeDescriptor typeReference,
+        int uploadScalarCount,
         string pathVariable,
         string variable)
     {
@@ -538,7 +542,7 @@ public class OperationServiceGenerator : ClassBaseGenerator<OperationDescriptor>
                             .SetLefthandSide($"var {innerPathVariable}")
                             .SetRighthandSide($"{pathVariable} + \".\" + ({counterVariable}++)"))
                         .AddEmptyLine()
-                        .AddCode(BuildUploadFileMapper(lt, innerPathVariable, innerVariable)));
+                        .AddCode(BuildUploadFileMapper(lt,uploadScalarCount, innerPathVariable, innerVariable)));
 
                 break;
             }
@@ -553,13 +557,15 @@ public class OperationServiceGenerator : ClassBaseGenerator<OperationDescriptor>
             }
             case ScalarTypeDescriptor { Name: "Upload" }:
             {
+                // based on uploadScalarCount, increment 'u1' to 'u2', 'u3' etc.
+                var uploadVariable = "u"+uploadScalarCount;
                 return CodeBlockBuilder.New()
                     .AddCode(
                         MethodCallBuilder
                             .New()
                             .SetMethodName(_files, "Add")
                             .AddArgument(pathVariable)
-                            .AddArgument($"{variable} is {TypeNames.Upload} u ? u : null"));
+                            .AddArgument($"{variable} is {TypeNames.Upload} {uploadVariable} ? {uploadVariable} : null"));
             }
             default:
                 throw ThrowHelper.OperationServiceGenerator_HasNoUploadScalar(typeReference);

@@ -39,7 +39,10 @@ public class InputGeneratorTests
                 input Bar {
                     str: String
                     strNonNullable: String!
-                }",
+                    qux: Qux!
+                }
+                input Qux { up: String! }",
+
             "extend schema @key(fields: \"id\")");
     }
 
