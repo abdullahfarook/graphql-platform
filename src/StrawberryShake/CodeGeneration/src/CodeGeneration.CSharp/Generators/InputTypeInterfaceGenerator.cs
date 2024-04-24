@@ -50,10 +50,9 @@ public class InputTypeInterfaceGenerator : CSharpSyntaxGenerator<InputObjectType
         InterfaceDeclarationSyntax interfaceDeclaration,
         string stateNamespace)
     {
-        var type = ParseTypeName($"{stateNamespace}.{CreateInputValue(prop.Type.Name)}");
         return interfaceDeclaration.AddMembers(
             PropertyDeclaration(
-                    type,
+                    prop.Type.ToStateInterfaceSyntax(stateNamespace),
                     prop.Name)
                 .WithGetter());
     }

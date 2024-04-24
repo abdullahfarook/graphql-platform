@@ -10,13 +10,14 @@ namespace StrawberryShake.CodeGeneration.CSharp.Generators;
 
 public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescriptor>
 {
+    private string _stateNamespace = null!;
     protected override CSharpSyntaxGeneratorResult Generate(
         InputObjectTypeDescriptor descriptor,
         CSharpSyntaxGeneratorSettings settings)
     {
-        var stateNamespace = $"{descriptor.RuntimeType.Namespace}.{State}";
-        var infoInterfaceType = $"{stateNamespace}.{CreateInputValueInfo(descriptor.Name)}";
-        var inputInterfaceType = $"{stateNamespace}.{CreateInputValue(descriptor.Name)}";
+        _stateNamespace = $"{descriptor.RuntimeType.Namespace}.{State}";
+        var infoInterfaceType = $"{_stateNamespace}.{CreateInputValueInfo(descriptor.Name)}";
+        var inputInterfaceType = $"{_stateNamespace}.{CreateInputValue(descriptor.Name)}";
 
         var modifier = settings.AccessModifier == AccessModifier.Public
             ? SyntaxKind.PublicKeyword
@@ -169,22 +170,22 @@ public class InputTypeGenerator : CSharpSyntaxGenerator<InputObjectTypeDescripto
                     .WithSemicolonToken(
                         Token(SyntaxKind.SemicolonToken)));
             // if prop is input and not filterInput then generate following
-            // StateNamespace.PropInterface inputInterfaceType.PropertyName { get => this.PropertyName; }
-           // i.e State.INomineeDtoInput State.ICreateIndividualInput.Nominee => Nominee;
+            // StateNamespace.PropInterface inputInterfaceType.PropertyName { get => this.PropertyName as StateNamespace.PropInterface; }
+           // i.e State.INomineeDtoInput State.ICreateIndividualInput.Nominee => Nominee as State.INomineeDtoInput ;
             if (prop.Type.IsInput() && prop.Type.IsFilterInput() == false)
             {
-                var stateNamespace = $"{descriptor.RuntimeType.Namespace}.{State}";
-                var returnType = ParseTypeName($"{stateNamespace}.{CreateInputValue(prop.Type.Name)}");
-                var propertyName = $"{interfaceType}.{prop.Name}";
-                current = current.AddMembers(
-                    PropertyDeclaration(
-                            returnType,
-                            propertyName)
-                        .WithExpressionBody(
-                            ArrowExpressionClause(
-                                IdentifierName(prop.Name)))
-                        .WithSemicolonToken(
-                            Token(SyntaxKind.SemicolonToken)));
+                var inputInterface = ParseTypeName($"{_stateNamespace}.I{prop.Type.Name}");
+                var interfaceProperty = PropertyDeclaration(
+                        prop.Type.ToStateInterfaceSyntax(_stateNamespace),
+                        $"{interfaceType}.{prop.Name}")
+                    .WithExpressionBody(
+                        ArrowExpressionClause(
+                            prop.Type.IsList()?
+                                ParseExpression($"{prop.Name}?.Cast<{inputInterface}>()?.ToList()"):
+                                ParseExpression($"{prop.Name} as {inputInterface}")))
+                    .WithSemicolonToken(
+                        Token(SyntaxKind.SemicolonToken));
+                current = current.AddMembers(interfaceProperty);
             }
 
         }

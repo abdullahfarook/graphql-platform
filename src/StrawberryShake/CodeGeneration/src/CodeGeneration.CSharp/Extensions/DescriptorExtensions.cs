@@ -32,6 +32,12 @@ public static class DescriptorExtensions
         TypeReferenceBuilder? builder = null) =>
         ParseTypeName(typeReferenceDescriptor.ToInterfaceReference(builder).ToString());
 
+    // ToInterfaceSyntax
+    public static TypeSyntax ToStateInterfaceSyntax(
+        this ITypeDescriptor typeReferenceDescriptor,
+        string stateNamespace,
+        TypeReferenceBuilder? builder = null) =>
+        ParseTypeName(typeReferenceDescriptor.ToStateInterfaceSyntaxReference(stateNamespace,builder).ToString());
     public static TypeReferenceBuilder ToTypeReference(
         this ITypeDescriptor typeReferenceDescriptor,
         TypeReferenceBuilder? builder = null,
@@ -112,6 +118,41 @@ public static class DescriptorExtensions
             INamedTypeDescriptor d => actualBuilder.SetName(d.RuntimeType.ToString()),
 
             _ => throw new ArgumentOutOfRangeException(nameof(typeDescriptor))
+        };
+    }
+
+    public static TypeReferenceBuilder ToStateInterfaceSyntaxReference(this ITypeDescriptor typeReferenceDescriptor,
+        string stateNamespace,
+        TypeReferenceBuilder? builder = null,
+        bool nonNull = false)
+    {
+        var actualBuilder = builder ?? TypeReferenceBuilder.New();
+
+        if (typeReferenceDescriptor is NonNullTypeDescriptor n)
+        {
+            typeReferenceDescriptor = n.InnerType;
+        }
+        else if (!nonNull)
+        {
+            actualBuilder.SetIsNullable(true);
+        }
+        var inputInterface = ParseTypeName($"{stateNamespace}.I{typeReferenceDescriptor.Name}");
+        return typeReferenceDescriptor switch
+        {
+            ListTypeDescriptor list =>
+                ToStateInterfaceSyntaxReference(list.InnerType, stateNamespace, actualBuilder.SetListType()),
+
+            EnumTypeDescriptor @enum =>
+                actualBuilder.SetName(@enum.RuntimeType.ToString()),
+
+            ILeafTypeDescriptor leaf =>
+                actualBuilder.SetName(leaf.RuntimeType.ToString()),
+
+            // TODO: change to interface by adding 'I'
+            INamedTypeDescriptor named =>
+                actualBuilder.SetName(inputInterface.ToString()),
+
+            _ => throw new ArgumentOutOfRangeException(nameof(typeReferenceDescriptor))
         };
     }
     // ToInterfaceReference
