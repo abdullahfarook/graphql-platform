@@ -210,7 +210,7 @@ public sealed class CommandServiceGenerator : ISyntaxGenerator
         // Handle method - NO private fields, use primary constructor parameters directly
         builder.AppendLine($"    public async Task<{resultType}> Handle(");
         builder.AppendLine($"        {commandTypeName} request,");
-        builder.AppendLine("        CancellationToken cancellationToken)");
+        builder.AppendLine("        CancellationToken cancellationToken = default)");
         builder.AppendLine("    {");
 
         // Build the method call using primary constructor parameters

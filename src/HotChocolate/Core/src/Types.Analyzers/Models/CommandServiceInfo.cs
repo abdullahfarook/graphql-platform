@@ -271,8 +271,7 @@ public sealed class CommandServiceInfo : SyntaxInfo
     private static bool IsCancellationToken(IParameterSymbol parameter)
     {
         var typeName = parameter.Type.ToDisplayString();
-        return string.Equals(typeName, WellKnownTypes.CancellationToken, StringComparison.Ordinal)
-            || string.Equals(typeName, WellKnownTypes.CancellationTokenFull, StringComparison.Ordinal);
+        return string.Equals(typeName, WellKnownTypes.CancellationToken, StringComparison.Ordinal);
     }
 
     private static bool IsLogger(ITypeSymbol type)
@@ -518,16 +517,16 @@ public static class CommandServiceErrors
         isEnabledByDefault: true);
 }
 
-public static class WellKnownTypes
-{
-    public const string CancellationToken = "CancellationToken";
-    public const string CancellationTokenFull = "System.Threading.CancellationToken";
-    public const string ILogger = "Microsoft.Extensions.Logging.ILogger";
-    public const string ILoggerGeneric = "Microsoft.Extensions.Logging.ILogger<";
-    public const string HttpContext = "Microsoft.AspNetCore.Http.HttpContext";
-    public const string IMediator = "MediatR.IMediator";
-    public const string ISender = "MediatR.ISender";
-}
+//public static class WellKnownTypes
+//{
+//    public const string CancellationToken = "CancellationToken";
+//    public const string CancellationTokenFull = "System.Threading.CancellationToken";
+//    public const string ILogger = "Microsoft.Extensions.Logging.ILogger";
+//    public const string ILoggerGeneric = "Microsoft.Extensions.Logging.ILogger<";
+//    public const string HttpContext = "Microsoft.AspNetCore.Http.HttpContext";
+//    public const string IMediator = "MediatR.IMediator";
+//    public const string ISender = "MediatR.ISender";
+//}
 
 public static class AttributeDataExtensions
 {

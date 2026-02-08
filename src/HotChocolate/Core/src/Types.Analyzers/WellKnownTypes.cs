@@ -107,6 +107,11 @@ public static class WellKnownTypes
     public const string ListTypeNode = "HotChocolate.Language.ListTypeNode";
     public const string NamedTypeNode = "HotChocolate.Language.NamedTypeNode";
 
+    public const string ILogger = "Microsoft.Extensions.Logging.ILogger";
+    public const string ILoggerGeneric = "Microsoft.Extensions.Logging.ILogger<";
+    public const string IMediator = "MediatR.IMediator";
+    public const string ISender = "MediatR.ISender";
+
     public static HashSet<string> TypeClass { get; } =
     [
         ObjectType,
