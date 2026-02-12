@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -57,12 +58,18 @@ public class DeleteNotification: IResult
 {
     public Guid Id { get; set; }
 }
-
+public partial record Hello([Required] string Title);
+public partial record Hello
+{
+    [Required]
+    public string Name { get; init; } = Title;
+}
 [CommandService]
 public class NotificationCommand
 {
     public Task<CSharpFunctionalExtensions.Result<Guid>> Handle(CreateNotification request, CancellationToken cancellationToken)
     {
+        var hello = new Hello("World");
         return Task.FromResult(CSharpFunctionalExtensions.Result.Success(Guid.NewGuid()));
     }
 

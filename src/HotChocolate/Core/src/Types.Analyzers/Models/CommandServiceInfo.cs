@@ -28,12 +28,18 @@ public sealed class CommandServiceInfo : SyntaxInfo
         _handlerNames = attributeData.GetHandlerNames();
 
         ServiceName = serviceType.Name;
-        Namespace = serviceType.ContainingNamespace.ToDisplayString();
-        if (Namespace == "<global namespace>")
+        var @namespace = serviceType.ContainingNamespace.ToDisplayString();
+        if (@namespace == "<global namespace>")
         {
-            Namespace = serviceType.ContainingModule.ToDisplayString().Replace(".dll", null);
+            //Namespace = serviceType.ContainingModule.ToDisplayString().Replace(".dll", null);
+            Namespace = string.Empty;
+            ServiceFullName = ServiceName;
         }
-        ServiceFullName = $"{Namespace}.{ServiceName}";
+        else
+        {
+            Namespace = @namespace;
+            ServiceFullName = $"{Namespace}.{ServiceName}";
+        }
 
         // Configuration from attribute
         GenerateInterfaces = attributeData.GetGenerateInterfaces();
